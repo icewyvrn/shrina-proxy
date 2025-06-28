@@ -32,11 +32,15 @@ import {
 
 const router: Router = express.Router();
 
+// Default referrer to use when none is provided
+const DEFAULT_REFERRER = process.env.DEFAULT_REFERRER;
+
 // Extend Express Request type to include targetUrl
 declare global {
   namespace Express {
     interface Request {
       targetUrl?: string;
+      customReferrer?: string;
     }
   }
 }
@@ -108,6 +112,14 @@ const validateUrlParam = (req: Request, res: Response, next: NextFunction) => {
   
   // Store validated URL in request object
   req.targetUrl = url;
+  
+  // Check if referrer is provided in query parameters
+  if (req.query.referrer) {
+    req.customReferrer = req.query.referrer as string;
+  } else {
+    req.customReferrer = DEFAULT_REFERRER;
+  }
+  
   next();
 };
 
@@ -119,6 +131,11 @@ const validateUrlParam = (req: Request, res: Response, next: NextFunction) => {
 async function streamProxyRequest(req: Request, res: Response, url: string, headers: Record<string, string>) {
   const requestStartTime = recordRequest();
   let responseSize = 0;
+  
+  // Add referrer to headers
+  if (req.customReferrer) {
+    headers['referer'] = req.customReferrer;
+  }
   
   // Track response size for streams
   const originalWrite = res.write;
@@ -581,12 +598,25 @@ async function proxyRequest(req: Request, res: Response, next: NextFunction) {
       'x-forwarded-for',
       'x-forwarded-host',
       'x-forwarded-proto',
+      'referer',
     ];
     
     for (const [key, value] of Object.entries(req.headers)) {
       if (!excludeHeaders.includes(key.toLowerCase()) && value) {
         headers[key] = Array.isArray(value) ? value.join(', ') : value;
       }
+    }
+    
+    // Set the referrer from the request object
+    if (req.customReferrer) {
+      headers['referer'] = req.customReferrer;
+      
+      logger.debug({
+        type: 'proxy',
+        url,
+        referrer: req.customReferrer,
+        source: req.query.referrer ? 'query_param' : 'default',
+      }, `Using referrer: ${req.customReferrer}`);
     }
     
     // Parse the target URL
