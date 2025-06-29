@@ -599,6 +599,7 @@ async function proxyRequest(req: Request, res: Response, next: NextFunction) {
       'x-forwarded-host',
       'x-forwarded-proto',
       'referer',
+      'cross-origin-resource-policy',
     ];
     
     for (const [key, value] of Object.entries(req.headers)) {
