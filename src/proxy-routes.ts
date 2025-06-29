@@ -216,6 +216,7 @@ async function streamProxyRequest(req: Request, res: Response, url: string, head
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Range');
     res.setHeader('Access-Control-Expose-Headers', 'Content-Length, Content-Range, Content-Type, Accept-Ranges');
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
     
     // Set status code
     res.status(response.status);
@@ -554,6 +555,7 @@ async function proxyRequest(req: Request, res: Response, next: NextFunction) {
         res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
         res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Range');
         res.setHeader('Access-Control-Expose-Headers', 'Content-Length, Content-Range, Content-Type, Accept-Ranges');
+        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
         
         // If we have a range request and cached the full response
         if (req.headers.range) {
